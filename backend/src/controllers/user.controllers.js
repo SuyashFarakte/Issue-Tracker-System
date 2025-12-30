@@ -206,7 +206,7 @@ const updateAccountDetails = async (req, res) => {
 const getdepartment = async (req, res) => {
   try {
     const dep = req.user.department;
-    const issues = await Issue.find({ requireDepartment: dep });
+    const issues = await Issue.find({ requireDepartment: dep }).populate('requireDepartment');
 
     res.status(200).json({
       success: true,

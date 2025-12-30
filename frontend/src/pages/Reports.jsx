@@ -18,7 +18,7 @@ function Reports(issues) {
         withCredentials: true
       })
       .then((response) => {
-        // console.log(response.data);
+        // console.log(response.data.data);
         
         settasks(response.data.data);
       })
@@ -62,7 +62,7 @@ function Reports(issues) {
                       <p className={task.complete ? 'text-green-600' : 'text-red-500'}>
                         {task.complete ? 'Yes' : 'No'}
                       </p>
-                      <p className="text-gray-700">{task.requireDepartment}</p>
+                      <p className="text-gray-700">{task.requireDepartment?.name || task.requireDepartment}</p>
                       <p className="text-gray-500">{task.acknowledge_at}</p>
                       <p className="text-gray-500">{task.createdAt}</p>
                       <p className="text-gray-500">

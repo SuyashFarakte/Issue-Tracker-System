@@ -97,7 +97,7 @@ const getissue = async (req,res)=>{
     try {
     const dep = req.user.department
     
-    const issues = await Issue.find({requireDepartment : dep, complete:false})
+    const issues = await Issue.find({requireDepartment : dep, complete:false}).populate('requireDepartment')
     
     return res.status(200).json({ success: true, data: issues })
     } catch (error) {
@@ -113,7 +113,7 @@ const updateResponses = async (req, res) => {
     const dep = req.user.department;
 
     // Find the issues for the user's department
-    const issues = await Issue.find({ requireDepartment: dep });
+    const issues = await Issue.find({ requireDepartment: dep }).populate('requireDepartment');
 
     // Check if any issues were found
     if (issues.length === 0) {
@@ -164,7 +164,7 @@ const updateResponses = async (req, res) => {
 const getIssueforuser = async (req,res)=>{
     try {
     const getuser = req.user._id
-    const findproblems = await Issue.find({ userId: getuser, complete: false });
+    const findproblems = await Issue.find({ userId: getuser, complete: false }).populate('requireDepartment');
     
 
     return res.status(200).json({ success: true, data: findproblems })
@@ -182,7 +182,7 @@ const completeReport = async (req, res) => {
     const userId = req.user._id;
     const { issueId } = req.body; // Get the specific issueId from the request body or params
     // Find the specific issue created by the user
-    const findProblem = await Issue.findOne({ _id: issueId, userId });
+    const findProblem = await Issue.findOne({ _id: issueId, userId }).populate('requireDepartment');
 
     if (!findProblem) {
       return res.status(404).json({ success: false, message: "No issue found with the provided ID for this user" });
@@ -238,7 +238,7 @@ const sendReportToAdmin = async (req, res) => {
     const userId = req.user._id;
 
     // Find all issues created by the user
-    const findProblems = await Issue.find({ userId:userId });
+    const findProblems = await Issue.find({ userId:userId }).populate('requireDepartment');
 
 
     // If no issues are found, return an appropriate message
@@ -263,7 +263,7 @@ const sendReportToAdmin = async (req, res) => {
 
 const fetchReport = async (req,res)=>{
     try {
-    const completedProblems = await Issue.find();
+    const completedProblems = await Issue.find().populate('requireDepartment');
     
     return res.status(200).json({ success: true, message: "Completed problems and responses fetched successfully", data: completedProblems });
     } catch (error) {

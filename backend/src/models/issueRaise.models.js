@@ -19,8 +19,8 @@ const issueSchema = new Schema(
             required : true
         },
         requireDepartment : {
-            type: String,
-            trim: true, 
+            type: Schema.Types.ObjectId,
+            ref: "Department",
             required : true
         },
         complete :{
