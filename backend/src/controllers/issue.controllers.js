@@ -30,11 +30,17 @@ const createIssue = async (req,res)=>{
         return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
-    const availableUser = await User.findOne({ department: requireDepartment });
+    console.log('Looking for user with department ID:', requireDepartment);
+    
+    // Find a user with this department ID
+    const availableUser = await User.findOne({ department: requireDepartment }).populate('department');
 
     if (!availableUser) {
+        console.log('No user found with department ID:', requireDepartment);
         return res.status(401).json({ success: false, message: "Required Department is not available" });
     }
+    
+    console.log('Found user:', availableUser.fullName, 'Department:', availableUser.department);
     
     const task = await Issue.create({
         issue,

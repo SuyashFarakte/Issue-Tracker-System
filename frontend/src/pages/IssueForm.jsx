@@ -12,6 +12,37 @@ function IssueForm () {
     requireDepartment: '',
   });
 
+  const [departments, setDepartments] = useState([]);
+  const [loadingDepts, setLoadingDepts] = useState(true);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        setLoadingDepts(true);
+        const accessToken = localStorage.getItem('accessToken');
+        const response = await axios.get('http://localhost:8000/api/v1/users/departments', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          withCredentials: true
+        });
+        if (response.data.success) {
+          setDepartments(response.data.data);
+          setError('');
+        }
+      } catch (error) {
+        console.error('Error fetching departments:', error.response?.data || error.message);
+        setError('Failed to load departments');
+      } finally {
+        setLoadingDepts(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
   const navigateToAboutPage = () => {
     window.location.href = '/issue-history';
   };
@@ -22,15 +53,22 @@ function IssueForm () {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) {
-        console.error('Access token not found');
+        setError('Session expired. Please login again.');
+        return;
+    }
+
+    if (!formData.issue || !formData.description || !formData.address || !formData.requireDepartment) {
+        setError('All fields are required');
         return;
     }
 
     try {
-        await axios.post('http://localhost:8000/api/v1/users/issues/raise-issue', 
+        setSubmitting(true);
+        const response = await axios.post('http://localhost:8000/api/v1/users/issues/raise-issue', 
             formData,
             {
                 headers: {
@@ -40,9 +78,14 @@ function IssueForm () {
                 withCredentials: true 
             }
         );
+        console.log('Issue submitted successfully:', response.data);
         navigateToAboutPage();
     } catch (error) {
-        console.error('Error submitting issue:', error.response?.data || error.message);
+        const errorMessage = error.response?.data?.message || error.message || 'Error submitting issue';
+        console.error('Error submitting issue:', errorMessage);
+        setError(errorMessage);
+    } finally {
+        setSubmitting(false);
     }
 };
 
@@ -56,6 +99,12 @@ function IssueForm () {
           onSubmit={handleSubmit}
           className="w-full max-w-xs sm:max-w-sm bg-white p-4 sm:p-6 shadow-lg border border-indigo-700 rounded-lg"
         >
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+
           <input
             type="text"
             name="issue"
@@ -85,17 +134,25 @@ function IssueForm () {
             value={formData.requireDepartment}
             onChange={handleChange}
             name="requireDepartment"
-            className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            disabled={loadingDepts}
+            required
+            className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-200"
           >
-            <option>Select required department</option>
-            <option>Software</option>
-            <option>Electrician</option>
+            <option value="">
+              {loadingDepts ? 'Loading departments...' : 'Select required department'}
+            </option>
+            {departments.map((dept) => (
+              <option key={dept._id} value={dept._id}>
+                {dept.name}
+              </option>
+            ))}
           </select>
           <button
             type="submit"
-            className="w-full py-2 sm:py-3 bg-indigo-600 text-white text-sm sm:text-base rounded-lg hover:bg-indigo-700"
+            disabled={submitting || loadingDepts}
+            className="w-full py-2 sm:py-3 bg-indigo-600 text-white text-sm sm:text-base rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Submit
+            {submitting ? 'Submitting...' : 'Submit'}
           </button>
         </form>
       </div>
